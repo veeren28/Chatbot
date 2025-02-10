@@ -1,39 +1,48 @@
 import React, { useState } from "react";
-// import axios from "axios";
 import { X, Send, Loader } from "lucide-react";
 import { BotMsg } from "./BotMsg";
 import { UserMsg } from "./UserMsg";
 import run from "./geminiapi";
 
 function ChatPage() {
-  const [inputData, setInputData] = useState("");
-  const [messages, setMessages] = useState([]);
-  const [response, setResponse] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [inputData, setInputData] = useState(""); // Stores user input
+  const [messages, setMessages] = useState([]); // Stores chat history
+  const [loading, setLoading] = useState(false); // Tracks API loading state
 
   const handleOnClick = async () => {
-    if (inputData.trim() === "") return;
+    if (inputData.trim() === "") return; // Prevent sending empty messages
     setLoading(true);
+
     try {
-      // receives the message and maps it into ui
+      // Add user message to chat history
       const userMessage = { sender: "user", text: inputData };
       setMessages((prevMessages) => [...prevMessages, userMessage]);
 
-      // gpt is generating result, and result will be mapped into ui
-      setResponse(await run(inputData));
-      // var response = await run(inputData);
-      const botMessage = { sender: "Bot", text: response };
-      setMessages((prevResp) => [...prevResp, botMessage]);
-    } catch {
-      setMessages("Error fecthing response");
+      // Send request to Gemini API and receive response
+      let resp = await run(inputData);
+
+      // Ensure response is a valid string
+      const botMessage = {
+        sender: "Bot",
+        text: resp ?? "No response received.",
+      };
+
+      // Add bot response to chat history
+      setMessages((prevMessages) => [...prevMessages, botMessage]);
+    } catch (error) {
+      // Handle API errors
+      const errorMessage = { sender: "Bot", text: "Error fetching response." };
+      setMessages((prevMessages) => [...prevMessages, errorMessage]);
     }
+
     setLoading(false);
-    setInputData("");
+    setInputData(""); // Clear input field after sending
   };
 
   return (
     <div className="m-0 p-0 box-border w-screen h-screen flex justify-center items-center bg-gradient-to-r from-blue-200 to-cyan-200">
       <div className="w-96 h-96 bg-white rounded-lg flex flex-col" id="chatbox">
+        {/* Chatbox Header */}
         <div className="w-full h-16 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-t-lg flex items-center justify-between px-4">
           <div className="text-3xl text-white">Chatbot</div>
           <button className="text-white cursor-pointer">
@@ -41,6 +50,7 @@ function ChatPage() {
           </button>
         </div>
 
+        {/* Chat Messages */}
         <div className="flex-grow flex flex-col overflow-auto p-2">
           {messages.map((msg, index) => (
             <div
@@ -60,6 +70,7 @@ function ChatPage() {
           ))}
         </div>
 
+        {/* Input Field & Send Button */}
         <div className="flex items-center p-2 border-t">
           <input
             type="text"
