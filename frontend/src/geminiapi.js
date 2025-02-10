@@ -1,21 +1,32 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+import {
+  GoogleGenerativeAI,
+  HarmCategory,
+  HarmBlockThreshold,
+} from "@google/generative-ai";
 
-async function runAI() {
-  const genAI = new GoogleGenerativeAI(
-    "AIzaSyBGXvtApA6MoxKi3XNuhLf1Ou7Msf-aYk8"
-  );
-  const model = genAI.getGenerativeModel({ model: "gemini-2" });
+const apiKey = "AIzaSyBGXvtApA6MoxKi3XNuhLf1Ou7Msf-aYk8";
+const genAI = new GoogleGenerativeAI(apiKey);
 
-  const prompt = "Explain how AI works";
+const model = genAI.getGenerativeModel({
+  model: "gemini-1.5-flash",
+});
 
-  try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
+const generationConfig = {
+  temperature: 1,
+  topP: 0.95,
+  topK: 40,
+  maxOutputTokens: 8192,
+  responseMimeType: "text/plain",
+};
 
-    console.log(response.candidates[0].content);
-  } catch (error) {
-    console.error("Error generating content:", error);
-  }
+async function run(prompt) {
+  const chatSession = model.startChat({
+    generationConfig,
+    history: [],
+  });
+
+  const result = await chatSession.sendMessage(prompt);
+  return result;
 }
 
-runAI();
+export default run;
